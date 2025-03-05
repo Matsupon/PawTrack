@@ -4,41 +4,53 @@ import { usePets } from '../PetContext';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AddPetForm from '../../components/AddPetForm';
+import PetDetailsModal from '../../components/PetDetailsModal';
 
 export default function PetsScreen() {
   const { pets } = usePets();
-  const [selectedFilter, setSelectedFilter] = useState('all'); // 'all', 'cat', 'dog'
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [isAddPetModalVisible, setIsAddPetModalVisible] = useState(false);
+  const [selectedPet, setSelectedPet] = useState(null);
+  const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
   const router = useRouter();
 
   const filteredPets = pets.filter(pet => {
     if (selectedFilter === 'all') return true;
-    return pet.type.toLowerCase() === selectedFilter;
+    return pet.species.toLowerCase() === selectedFilter;
   });
 
+  const handlePetPress = (pet) => {
+    setSelectedPet(pet);
+    setIsPetDetailsModalVisible(true);
+  };
+
   const PetCard = ({ pet }) => (
-    <View style={styles.petCard}>
+    <TouchableOpacity 
+      style={styles.petCard}
+      onPress={() => handlePetPress(pet)}
+    >
       <Image
-        source={{ uri: pet.imageUrl }}
+        source={{ uri: pet.imageUri }}
         style={styles.petImage}
       />
       <View style={styles.petInfo}>
         <Text style={styles.petName}>{pet.name}</Text>
         <Text style={styles.petDetail}>Gender: {pet.gender}</Text>
+        <Text style={styles.petDetail}>Breed: {pet.breed}</Text>
         <Text style={styles.petDetail}>Age: {pet.age}</Text>
         <Text style={styles.petDescription}>"{pet.description}"</Text>
         <View style={styles.statusContainer}>
           <Text style={[
             styles.statusText,
-            pet.status === 'Available' && styles.statusAvailable,
-            pet.status === 'Adopted' && styles.statusAdopted,
-            pet.status === 'Reserved' && styles.statusReserved,
+            pet.adoptionStatus === 'Available' && styles.statusAvailable,
+            pet.adoptionStatus === 'Adopted' && styles.statusAdopted,
+            pet.adoptionStatus === 'Reserved' && styles.statusReserved,
           ]}>
-            {pet.status}
+            {pet.adoptionStatus}
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -97,11 +109,19 @@ export default function PetsScreen() {
           <AddPetForm 
             onClose={() => setIsAddPetModalVisible(false)}
             onSubmit={(newPet) => {
-              // Handle adding the new pet
               setIsAddPetModalVisible(false);
             }}
           />
         </Modal>
+
+        <PetDetailsModal 
+          visible={isPetDetailsModalVisible}
+          pet={selectedPet}
+          onClose={() => {
+            setIsPetDetailsModalVisible(false);
+            setSelectedPet(null);
+          }}
+        />
       </View>
     </SafeAreaView>
   );
@@ -171,6 +191,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 30,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
   },
   petImage: {
     width: 89,

@@ -88,7 +88,7 @@ PawTrack is a comprehensive mobile application designed to streamline pet adopti
 {
   id: string;              // Unique identifier
   name: string;            // Pet's name
-  species: string;         // Dog and Cat
+  species: 'Cat' | 'Dog';         // Dog and Cat
   breed: string;          // Breed information
   gender: 'Male' | 'Female';
   age: number;            // Age in months

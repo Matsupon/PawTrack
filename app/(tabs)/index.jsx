@@ -38,7 +38,9 @@ export default function HomeScreen() {
         <Text style={styles.petDetail}>Gender: {pet.gender}</Text>
         <Text style={styles.petDetail}>Breed: {pet.breed}</Text>
         <Text style={styles.petDetail}>Age: {pet.age}</Text>
-        <Text style={styles.petDescription}>"{pet.description}"</Text>
+        <Text style={styles.petDescription} numberOfLines={3} ellipsizeMode="tail">
+          "{pet.description}"
+        </Text>
         <View style={styles.statusContainer}>
           <Text style={[
             styles.statusText,
@@ -149,9 +151,11 @@ const styles = StyleSheet.create({
   },
   petImage: {
     width: 89,
-    height: 111,
+    height: 140,
     borderRadius: 8,
     marginRight: 12,
+    alignSelf: 'flex-start',
+    marginTop: 4,
   },
   petInfo: {
     flex: 1,

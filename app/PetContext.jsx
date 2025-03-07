@@ -6,8 +6,7 @@ const STORAGE_KEY = '@pawtrack_pets';
 
 export const PetProvider = ({ children }) => {
   const [pets, setPets] = useState([]);
-
-  // Load pets from AsyncStorage on mount
+ 
   useEffect(() => {
     loadPets();
   }, []);
@@ -44,17 +43,34 @@ export const PetProvider = ({ children }) => {
 
   const updatePetStatus = async (id, status, adopterInfo) => {
     const updatedPets = pets.map(pet => 
-      pet.id === id ? { ...pet, status, adopterInfo } : pet
+      pet.id === id ? { 
+        ...pet,
+        adoptionStatus: status,
+        adopterInfo: status === 'Adopted' ? adopterInfo : null,
+        adoptionDate: status === 'Adopted' ? new Date().toISOString() : null
+      } : pet
     );
     setPets(updatedPets);
     await savePets(updatedPets);
   };
 
   const deletePet = async (id) => {
-    const updatedPets = pets.filter(pet => pet.id !== id);
-    setPets(updatedPets);
-    await savePets(updatedPets);
+    try {
+      console.log("Deleting pet with ID:", id);
+      // Make a copy of the current pets array
+      const currentPets = [...pets];
+      // Filter out the pet with the given id
+      const updatedPets = currentPets.filter(pet => pet.id !== id);
+      console.log("Before deletion:", currentPets.length, "After deletion:", updatedPets.length);
+      // Update state first
+      setPets(updatedPets);
+      // Then save to AsyncStorage
+      await savePets(updatedPets);
+    } catch (error) {
+      console.error("Error deleting pet:", error);
+    }
   };
+  
 
   const searchPets = (query) => {
     return pets.filter(pet => 

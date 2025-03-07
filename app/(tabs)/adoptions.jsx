@@ -1,20 +1,42 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, Image } from 'react-native';
 import { usePets } from '../PetContext';
 
 export default function AdoptionsScreen() {
   const { pets } = usePets();
   
   // Filter only adopted pets
-  const adoptedPets = pets.filter(pet => pet.status === 'Adopted');
+  const adoptedPets = pets.filter(pet => pet.adoptionStatus === 'Adopted');
 
   const renderAdoptionItem = ({ item }) => (
     <View style={styles.adoptionCard}>
-      <Text style={styles.petName}>{item.name}</Text>
-      <Text style={styles.petDetails}>Type: {item.type}</Text>
-      <Text style={styles.petDetails}>Breed: {item.breed}</Text>
-      <Text style={styles.petDetails}>Age: {item.age}</Text>
-      <Text style={styles.adoptionDate}>Adopted on: {item.adoptionDate || 'Date not available'}</Text>
+      {/* Pet Image */}
+      {item.imageUri ? (
+        <Image source={{ uri: item.imageUri }} style={styles.petImage} />
+      ) : (
+        <View style={[styles.petImage, styles.placeholder]} />
+      )}
+
+      {/* Center Content */}
+      <View style={styles.textContainer}>
+        <Text style={styles.petName}>{item.name}</Text>
+        {item.adopterInfo && (
+          <>
+            <Text style={styles.adopterName}>{item.adopterInfo.name}</Text>
+            <Text style={styles.contactInfo}>{item.adopterInfo.contact}</Text>
+          </>
+        )}
+        <Text style={styles.adoptionDate}>
+          {item.adoptionDate ? new Date(item.adoptionDate).toLocaleDateString() : 'No adoption date'}
+        </Text>
+      </View>
+
+      {/* Adopter Image */}
+      {item.adopterInfo?.imageUri ? (
+        <Image source={{ uri: item.adopterInfo.imageUri }} style={styles.adopterImage} />
+      ) : (
+        <View style={[styles.adopterImage, styles.placeholder]} />
+      )}
     </View>
   );
 
@@ -55,10 +77,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  listContainer: {
-    paddingBottom: 20,
-  },
   adoptionCard: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 14,
     padding: 16,
@@ -68,28 +88,55 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 30,
+    alignItems: 'center',
+  },
+  petImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+  },
+  adopterImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginLeft: 'auto',
+  },
+  textContainer: {
+    flex: 1,
+    marginRight: 10,
   },
   petName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#3F3E3F',
-    marginBottom: 8,
-  },
-  petDetails: {
-    fontSize: 14,
     color: '#3F3E3F',
     marginBottom: 4,
   },
-  adoptionDate: {
+  adopterName: {
     fontSize: 14,
-    color: '#EF8888',
+    color: '#3F3E3F',
+  },
+  adoptionDate: {
+    fontSize: 12,
+    color: '#838383',
     marginTop: 8,
-    fontStyle: 'italic',
   },
   emptyText: {
     textAlign: 'center',
     color: '#838383',
     fontSize: 16,
     marginTop: 40,
+  },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  placeholder: {
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contactInfo: {
+    fontSize: 12,
+    color: '#838383',
   },
 }); 

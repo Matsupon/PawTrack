@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaView, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaView, Modal, Alert } from 'react-native';
 import { usePets } from '../PetContext';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,12 +7,21 @@ import AddPetForm from '../../components/AddPetForm';
 import PetDetailsModal from '../../components/PetDetailsModal';
 
 export default function PetsScreen() {
-  const { pets } = usePets();
+  const { pets, deletePet } = usePets();
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isAddPetModalVisible, setIsAddPetModalVisible] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setSelectedPet(null);
+    setIsPetDetailsModalVisible(false);
+  }, [pets]);
+
+  useEffect(() => {
+    console.log("Pets updated, current count:", pets.length);
+  }, [pets]);
 
   const filteredPets = pets.filter(pet => {
     if (selectedFilter === 'all') return true;

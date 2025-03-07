@@ -9,10 +9,8 @@ export default function AppLayout() {
   const [isLoading, setIsLoading] = useState(true);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  useEffect(() => {
-    // Show splash screen for 1 second
-    const timer = setTimeout(() => {
-      // Start fade out animation
+  useEffect(() => { 
+    const timer = setTimeout(() => { 
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 500,

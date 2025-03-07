@@ -4,6 +4,7 @@ import { View, Text, Modal, StyleSheet, ScrollView, TextInput,
 import { FontAwesome } from '@expo/vector-icons';
 import { usePets } from '../app/PetContext';
 import * as ImagePicker from 'expo-image-picker';
+import AdoptedModal from './AdoptedModal';
 
 export default function EditPetModal({ visible, pet, onClose }) {
   const { updatePet } = usePets();
@@ -11,6 +12,7 @@ export default function EditPetModal({ visible, pet, onClose }) {
     ...pet
   });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
+  const [showAdoptedModal, setShowAdoptedModal] = useState(false);
   const adoptionStatuses = ['Available', 'Reserved', 'Adopted'];
 
   const pickImage = async () => {
@@ -29,6 +31,34 @@ export default function EditPetModal({ visible, pet, onClose }) {
   const handleSubmit = () => {
     updatePet(petData);
     onClose();
+  };
+
+  const handleStatusChange = async (status) => {
+    if (status === 'Adopted') {
+      setShowAdoptedModal(true);
+    } else {
+      const updatedPet = {
+        ...petData,
+        adoptionStatus: status,
+        adopterInfo: null,
+        adoptionDate: null
+      };
+      setPetData(updatedPet);
+      await updatePet(updatedPet);
+    }
+    setShowStatusPicker(false);
+  };
+
+  const handleAdopterSave = async (adopterInfo) => {
+    const updatedPet = {
+      ...petData,
+      adoptionStatus: 'Adopted',
+      adopterInfo,
+      adoptionDate: new Date().toISOString()
+    };
+    setPetData(updatedPet);
+    await updatePet(updatedPet);
+    setShowAdoptedModal(false);
   };
 
   return (
@@ -122,10 +152,7 @@ export default function EditPetModal({ visible, pet, onClose }) {
                   <TouchableOpacity
                     key={status}
                     style={styles.statusOption}
-                    onPress={() => {
-                      setPetData({ ...petData, adoptionStatus: status });
-                      setShowStatusPicker(false);
-                    }}
+                    onPress={() => handleStatusChange(status)}
                   >
                     <Text style={[
                       styles.statusOptionText,
@@ -182,6 +209,12 @@ export default function EditPetModal({ visible, pet, onClose }) {
             <Text style={styles.submitButtonText}>Save Changes</Text>
           </TouchableOpacity>
         </ScrollView>
+
+        <AdoptedModal
+          visible={showAdoptedModal}
+          onClose={() => setShowAdoptedModal(false)}
+          onSave={handleAdopterSave}
+        />
       </View>
     </Modal>
   );

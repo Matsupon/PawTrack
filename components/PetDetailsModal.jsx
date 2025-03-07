@@ -1,18 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, Modal, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import EditPetModal from './EditPetModal';
+import { usePets } from '../app/PetContext';
 
 export default function PetDetailsModal({ visible, pet, onClose }) {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { deletePet } = usePets();
 
   if (!pet) return null;
+
+  const handleDelete = () => {
+    // Instead of using Alert, set state to show our custom confirmation
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      console.log("Deleting pet with ID:", pet.id);
+      await deletePet(pet.id);
+      setShowDeleteConfirm(false);
+      onClose(); // Close the modal after deletion
+    } catch (error) {
+      console.error("Error deleting pet:", error);
+    }
+  };
 
   return (
     <Modal
       visible={visible}
       animationType="slide"
       onRequestClose={onClose}
+      transparent={false}
     >
       <View style={styles.container}>
         <View style={styles.header}>
@@ -121,6 +141,42 @@ export default function PetDetailsModal({ visible, pet, onClose }) {
             </View>
           </View>
         </ScrollView>
+
+        {/* Fixed position button at the bottom */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDelete}
+          >
+            <Text style={styles.buttonText}>Delete Pet</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Custom Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <View style={styles.confirmOverlay}>
+            <View style={styles.confirmBox}>
+              <Text style={styles.confirmTitle}>Delete Pet</Text>
+              <Text style={styles.confirmMessage}>
+                Are you sure you want to delete this pet?
+              </Text>
+              <View style={styles.confirmButtons}>
+                <TouchableOpacity 
+                  style={[styles.confirmButton, styles.cancelButton]}
+                  onPress={() => setShowDeleteConfirm(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.confirmButton, styles.deleteConfirmButton]}
+                  onPress={confirmDelete}
+                >
+                  <Text style={styles.confirmButtonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
 
         <EditPetModal 
           visible={isEditModalVisible}
@@ -276,5 +332,86 @@ const styles = StyleSheet.create({
   statusReserved: {
     color: '#E2E02D',
     backgroundColor: 'rgba(226, 224, 45, 0.1)',
+  },
+  buttonContainer: {
+    padding: 16,
+    paddingBottom: 30,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  
+  // Custom confirmation modal styles
+  confirmOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000, // High z-index to ensure it's on top
+  },
+  confirmBox: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  confirmTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#3F3E3F',
+  },
+  confirmMessage: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#3F3E3F',
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  confirmButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  deleteConfirmButton: {
+    backgroundColor: '#FF3B30',
+  },
+  cancelButtonText: {
+    color: '#3F3E3F',
+    fontWeight: 'bold',
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 }); 

@@ -1,25 +1,34 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, Modal, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, Modal, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import EditPetModal from './EditPetModal';
 import { usePets } from '../app/PetContext';
 
-export default function PetDetailsModal({ visible, pet, onClose }) {
+export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHistory = false }) {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { deletePet } = usePets();
+  const [showReturnConfirm, setShowReturnConfirm] = useState(false);
+  const [statusChanged, setStatusChanged] = useState(false);
+  const [currentPet, setCurrentPet] = useState(pet);
+  const { deletePet, updatePet } = usePets();
 
-  if (!pet) return null;
+  // Update currentPet when pet prop changes
+  useEffect(() => {
+    if (pet) {
+      setCurrentPet(pet);
+    }
+  }, [pet]);
+
+  if (!currentPet) return null;
 
   const handleDelete = () => {
-    // Instead of using Alert, set state to show our custom confirmation
     setShowDeleteConfirm(true);
   };
 
   const confirmDelete = async () => {
     try {
-      console.log("Deleting pet with ID:", pet.id);
-      await deletePet(pet.id);
+      console.log("Deleting pet with ID:", currentPet.id);
+      await deletePet(currentPet.id);
       setShowDeleteConfirm(false);
       onClose(); // Close the modal after deletion
     } catch (error) {
@@ -27,48 +36,93 @@ export default function PetDetailsModal({ visible, pet, onClose }) {
     }
   };
 
+  const handleEditPress = () => {
+    if (fromAdoptionHistory) {
+      // For adoption history, show custom return confirmation
+      setShowReturnConfirm(true);
+    } else {
+      // Normal edit for non-adoption history
+      setIsEditModalVisible(true);
+    }
+  };
+
+  const handleEditClose = (updatedPet) => {
+    // If we received an updated pet, update our local state
+    if (updatedPet) {
+      setCurrentPet(updatedPet);
+      
+      // If status changed to Available from Adoption History, set flag
+      if (fromAdoptionHistory && updatedPet.adoptionStatus === 'Available') {
+        setStatusChanged(true);
+      }
+    }
+    
+    // Close the edit modal
+    setIsEditModalVisible(false);
+  };
+
+  const confirmReturnPet = async () => {
+    try {
+      const updatedPet = {
+        ...currentPet,
+        adoptionStatus: 'Available',
+        adopterInfo: null,
+        adoptionDate: null
+      };
+      await updatePet(updatedPet);
+      setCurrentPet(updatedPet);
+      setStatusChanged(true);
+      setShowReturnConfirm(false);
+      onClose(true); // Pass true to indicate status changed
+    } catch (error) {
+      console.error("Error returning pet:", error);
+    }
+  };
+
   return (
     <Modal
       visible={visible}
       animationType="slide"
-      onRequestClose={onClose}
+      onRequestClose={() => onClose(statusChanged)}
       transparent={false}
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => onClose(statusChanged)}>
             <FontAwesome name="close" size={24} color="#3F3E3F" />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.editButton}
-            onPress={() => setIsEditModalVisible(true)}
+            onPress={handleEditPress}
           >
             <FontAwesome name="edit" size={20} color="#fff" />
-            <Text style={styles.editButtonText}>Edit</Text>
+            <Text style={styles.editButtonText}>
+              {fromAdoptionHistory ? "Return Pet" : "Edit"}
+            </Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.scrollView}>
           <Image 
-            source={{ uri: pet.imageUri }} 
+            source={{ uri: currentPet.imageUri }} 
             style={styles.image}
             resizeMode="cover"
           />
           
           <View style={styles.infoContainer}>
-            <Text style={styles.name}>{pet.name}</Text>
+            <Text style={styles.name}>{currentPet.name}</Text>
             
             <View style={styles.detailRow}>
               <View style={styles.detailItem}>
                 <FontAwesome name="paw" size={20} color="#FFB08C" />
                 <Text style={styles.detailLabel}>Species</Text>
-                <Text style={styles.detailValue}>{pet.species}</Text>
+                <Text style={styles.detailValue}>{currentPet.species}</Text>
               </View>
               
               <View style={styles.detailItem}>
                 <FontAwesome name="info-circle" size={20} color="#FFB08C" />
                 <Text style={styles.detailLabel}>Breed</Text>
-                <Text style={styles.detailValue}>{pet.breed}</Text>
+                <Text style={styles.detailValue}>{currentPet.breed}</Text>
               </View>
             </View>
 
@@ -76,13 +130,13 @@ export default function PetDetailsModal({ visible, pet, onClose }) {
               <View style={styles.detailItem}>
                 <FontAwesome name="venus-mars" size={20} color="#FFB08C" />
                 <Text style={styles.detailLabel}>Gender</Text>
-                <Text style={styles.detailValue}>{pet.gender}</Text>
+                <Text style={styles.detailValue}>{currentPet.gender}</Text>
               </View>
               
               <View style={styles.detailItem}>
                 <FontAwesome name="calendar" size={20} color="#FFB08C" />
                 <Text style={styles.detailLabel}>Age</Text>
-                <Text style={styles.detailValue}>{pet.age}</Text>
+                <Text style={styles.detailValue}>{currentPet.age}</Text>
               </View>
             </View>
 
@@ -93,31 +147,31 @@ export default function PetDetailsModal({ visible, pet, onClose }) {
                 <View style={styles.healthItem}>
                   <FontAwesome name="medkit" size={20} color="#FFB08C" />
                   <Text style={styles.healthLabel}>Health Status</Text>
-                  <Text style={styles.healthValue}>{pet.healthStatus}</Text>
+                  <Text style={styles.healthValue}>{currentPet.healthStatus}</Text>
                 </View>
                 
                 <View style={styles.healthItem}>
                   <FontAwesome name="balance-scale" size={20} color="#FFB08C" />
                   <Text style={styles.healthLabel}>Weight</Text>
-                  <Text style={styles.healthValue}>{pet.weight} kg</Text>
+                  <Text style={styles.healthValue}>{currentPet.weight} kg</Text>
                 </View>
               </View>
 
               <View style={styles.statusRow}>
                 <View style={styles.statusItem}>
                   <FontAwesome 
-                    name={pet.vaccinated ? "check-circle" : "times-circle"} 
+                    name={currentPet.vaccinated ? "check-circle" : "times-circle"} 
                     size={20} 
-                    color={pet.vaccinated ? "#64D2A4" : "#EF8888"} 
+                    color={currentPet.vaccinated ? "#64D2A4" : "#EF8888"} 
                   />
                   <Text style={styles.statusLabel}>Vaccinated</Text>
                 </View>
                 
                 <View style={styles.statusItem}>
                   <FontAwesome 
-                    name={pet.neutered ? "check-circle" : "times-circle"} 
+                    name={currentPet.neutered ? "check-circle" : "times-circle"} 
                     size={20} 
-                    color={pet.neutered ? "#64D2A4" : "#EF8888"} 
+                    color={currentPet.neutered ? "#64D2A4" : "#EF8888"} 
                   />
                   <Text style={styles.statusLabel}>Neutered</Text>
                 </View>
@@ -126,31 +180,45 @@ export default function PetDetailsModal({ visible, pet, onClose }) {
 
             <View style={styles.descriptionSection}>
               <Text style={styles.sectionTitle}>Description</Text>
-              <Text style={styles.description}>{pet.description}</Text>
+              <Text style={styles.description}>{currentPet.description}</Text>
             </View>
 
             <View style={styles.adoptionStatus}>
               <Text style={[
                 styles.adoptionStatusText,
-                pet.adoptionStatus === 'Available' && styles.statusAvailable,
-                pet.adoptionStatus === 'Adopted' && styles.statusAdopted,
-                pet.adoptionStatus === 'Reserved' && styles.statusReserved,
+                currentPet.adoptionStatus === 'Available' && styles.statusAvailable,
+                currentPet.adoptionStatus === 'Adopted' && styles.statusAdopted,
+                currentPet.adoptionStatus === 'Reserved' && styles.statusReserved,
               ]}>
-                {pet.adoptionStatus}
+                {currentPet.adoptionStatus}
               </Text>
             </View>
+
+            {/* If from adoption history, show adopter info */}
+            {fromAdoptionHistory && currentPet.adopterInfo && (
+              <View style={styles.adopterSection}>
+                <Text style={styles.sectionTitle}>Adopter Information</Text>
+                <Text style={styles.adopterDetail}>Name: {currentPet.adopterInfo.name}</Text>
+                <Text style={styles.adopterDetail}>Contact: {currentPet.adopterInfo.contact}</Text>
+                <Text style={styles.adopterDetail}>
+                  Adoption Date: {new Date(currentPet.adoptionDate).toLocaleDateString()}
+                </Text>
+              </View>
+            )}
           </View>
         </ScrollView>
 
-        {/* Fixed position button at the bottom */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-          >
-            <Text style={styles.buttonText}>Delete Pet</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Only show delete button if not from adoption history */}
+        {!fromAdoptionHistory && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDelete}
+            >
+              <Text style={styles.buttonText}>Delete Pet</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Custom Delete Confirmation Modal */}
         {showDeleteConfirm && (
@@ -178,10 +246,36 @@ export default function PetDetailsModal({ visible, pet, onClose }) {
           </View>
         )}
 
+        {/* Custom Return Pet Confirmation Modal */}
+        {showReturnConfirm && (
+          <View style={styles.confirmOverlay}>
+            <View style={styles.confirmBox}>
+              <Text style={styles.confirmTitle}>Return Pet</Text>
+              <Text style={styles.confirmMessage}>
+                Has this pet been returned by the adopter?
+              </Text>
+              <View style={styles.confirmButtons}>
+                <TouchableOpacity 
+                  style={[styles.confirmButton, styles.cancelButton]}
+                  onPress={() => setShowReturnConfirm(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.confirmButton, styles.returnConfirmButton]}
+                  onPress={confirmReturnPet}
+                >
+                  <Text style={styles.confirmButtonText}>Yes, Return to Available</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
         <EditPetModal 
           visible={isEditModalVisible}
-          pet={pet}
-          onClose={() => setIsEditModalVisible(false)}
+          pet={currentPet}
+          onClose={handleEditClose}
         />
       </View>
     </Modal>
@@ -402,16 +496,38 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#f0f0f0',
-  },
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    paddingVertical: 10,  
+    paddingHorizontal: 20,  
+    borderRadius: 8,  
+},
   deleteConfirmButton: {
     backgroundColor: '#FF3B30',
+  },
+  returnConfirmButton: {
+    backgroundColor: '#64D2A4',  
   },
   cancelButtonText: {
     color: '#3F3E3F',
     fontWeight: 'bold',
-  },
+    textAlign: 'center',  
+},
   confirmButtonText: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  adopterSection: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 10,
+  },
+  adopterDetail: {
+    fontSize: 16,
+    color: '#3F3E3F',
+    marginBottom: 8,
   },
 }); 

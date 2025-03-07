@@ -10,14 +10,18 @@ export default function HomeScreen() {
   const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredPets = pets.filter(pet => {
-    const query = searchQuery.toLowerCase();
-    return (
-      pet.name.toLowerCase().includes(query) ||
-      pet.breed.toLowerCase().includes(query) ||
-      pet.status.toLowerCase().includes(query)
-    );
-  });
+  // Filter out adopted pets first, then apply search filter
+  const filteredPets = pets
+    .filter(pet => pet.adoptionStatus !== 'Adopted')
+    .filter(pet => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        pet.name.toLowerCase().includes(query) ||
+        pet.breed.toLowerCase().includes(query) ||
+        (pet.adoptionStatus && pet.adoptionStatus.toLowerCase().includes(query))
+      );
+    });
 
   const handlePetPress = (pet) => {
     setSelectedPet(pet);

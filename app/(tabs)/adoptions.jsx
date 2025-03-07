@@ -1,15 +1,44 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, TouchableOpacity } from 'react-native';
 import { usePets } from '../PetContext';
+import PetDetailsModal from '../../components/PetDetailsModal';
+import { useRouter } from 'expo-router';
 
 export default function AdoptionsScreen() {
   const { pets } = usePets();
-  
-  // Filter only adopted pets
   const adoptedPets = pets.filter(pet => pet.adoptionStatus === 'Adopted');
+  const [selectedPet, setSelectedPet] = useState(null);
+  const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
+  const router = useRouter();
+
+  // Add this useEffect to refresh the list when pets change
+  useEffect(() => {
+    console.log("Pets updated in adoptions screen");
+  }, [pets]);
+
+  const handlePetPress = (pet) => {
+    setSelectedPet(pet);
+    setIsPetDetailsModalVisible(true);
+  };
+
+  const handleModalClose = (statusChanged = false) => {
+    setIsPetDetailsModalVisible(false);
+    setSelectedPet(null);
+    
+    // If status was changed to Available, navigate to home screen
+    if (statusChanged) {
+      console.log("Status changed, navigating to home");
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 300); // Small delay to ensure modal is fully closed
+    }
+  };
 
   const renderAdoptionItem = ({ item }) => (
-    <View style={styles.adoptionCard}>
+    <TouchableOpacity 
+      style={styles.adoptionCard}
+      onPress={() => handlePetPress(item)}
+    >
       {/* Pet Image */}
       {item.imageUri ? (
         <Image source={{ uri: item.imageUri }} style={styles.petImage} />
@@ -37,7 +66,7 @@ export default function AdoptionsScreen() {
       ) : (
         <View style={[styles.adopterImage, styles.placeholder]} />
       )}
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -50,11 +79,18 @@ export default function AdoptionsScreen() {
         ) : (
           <FlatList
             data={adoptedPets}
-            keyExtractor={(item) => item.id}
             renderItem={renderAdoptionItem}
-            contentContainerStyle={styles.listContainer}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.list}
           />
         )}
+
+        <PetDetailsModal 
+          visible={isPetDetailsModalVisible}
+          pet={selectedPet}
+          onClose={handleModalClose}
+          fromAdoptionHistory={true}
+        />
       </View>
     </SafeAreaView>
   );
@@ -127,7 +163,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 40,
   },
-  listContainer: {
+  list: {
     paddingBottom: 20,
   },
   placeholder: {

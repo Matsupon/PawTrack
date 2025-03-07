@@ -23,10 +23,12 @@ export default function PetsScreen() {
     console.log("Pets updated, current count:", pets.length);
   }, [pets]);
 
-  const filteredPets = pets.filter(pet => {
-    if (selectedFilter === 'all') return true;
-    return pet.species.toLowerCase() === selectedFilter;
-  });
+  const filteredPets = pets
+    .filter(pet => pet.adoptionStatus !== 'Adopted')
+    .filter(pet => {
+      if (selectedFilter === 'all') return true;
+      return pet.species.toLowerCase() === selectedFilter;
+    });
 
   const handlePetPress = (pet) => {
     setSelectedPet(pet);

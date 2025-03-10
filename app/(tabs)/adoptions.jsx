@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, TouchableOpacity
 import { usePets } from '../PetContext';
 import PetDetailsModal from '../../components/PetDetailsModal';
 import { useRouter } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function AdoptionsScreen() {
   const { pets } = usePets();
@@ -74,8 +75,19 @@ export default function AdoptionsScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>Adoption History</Text>
         
+        {/* Add total adopted pets counter */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>{adoptedPets.length}</Text>
+            <Text style={styles.statLabel}>Total Adopted Pets</Text> 
+          </View>
+        </View>
+        
         {adoptedPets.length === 0 ? (
-          <Text style={styles.emptyText}>No adoption history yet</Text>
+          <View style={styles.emptyContainer}>
+            <FontAwesome name="paw" size={50} color="#E5E5E5" />
+            <Text style={styles.emptyText}>No adoption history yet</Text>
+          </View>
         ) : (
           <FlatList
             data={adoptedPets}
@@ -103,76 +115,115 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor: '#fff',
     padding: 16,
-    paddingTop: 40,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#3F3E3F',
     textAlign: 'center',
+    marginVertical: 20,
+  },
+  statsContainer: {
     marginBottom: 20,
+    alignItems: 'center',
+  },
+  statBox: {
+    backgroundColor: '#F8F8F8', 
+    borderRadius: 12,
+    padding: 15,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FF8C94', // Pink color for adoption theme
+    marginRight: 10,
+  },
+  statLabel: {
+    fontSize: 16,
+    color: '#3F3E3F',
+  },
+  statIcon: {
+    marginLeft: 10,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#838383',
+    marginTop: 15,
+  },
+  list: {
+    paddingBottom: 20,
   },
   adoptionCard: {
     flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
+    padding: 15,
+    marginBottom: 15,
     elevation: 2,
     shadowColor: '#353566',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 30,
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
   },
   petImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
-  },
-  adopterImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginLeft: 'auto',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginRight: 15,
   },
   textContainer: {
     flex: 1,
-    marginRight: 10,
+    justifyContent: 'center',
   },
   petName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#3F3E3F',
     marginBottom: 4,
   },
   adopterName: {
-    fontSize: 14,
-    color: '#3F3E3F',
-  },
-  adoptionDate: {
-    fontSize: 12,
-    color: '#838383',
-    marginTop: 8,
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#838383',
     fontSize: 16,
-    marginTop: 40,
-  },
-  list: {
-    paddingBottom: 20,
-  },
-  placeholder: {
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
+    color: '#3F3E3F',
+    marginBottom: 2,
   },
   contactInfo: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#838383',
+    marginBottom: 4,
+  },
+  adoptionDate: {
+    fontSize: 14,
+    color: '#FF8C94',
+    fontStyle: 'italic',
+  },
+  adopterImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginLeft: 10,
+  },
+  placeholder: {
+    backgroundColor: '#E5E5E5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 

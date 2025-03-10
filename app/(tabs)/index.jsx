@@ -1,58 +1,58 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaView, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaView, FlatList, Dimensions } from 'react-native';
 import { usePets } from '../PetContext';
 import { FontAwesome } from '@expo/vector-icons';
 import PetDetailsModal from '../../components/PetDetailsModal';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
-  const { pets, deletePet, updatePetStatus } = usePets();
+  const { pets } = usePets();
   const [selectedPet, setSelectedPet] = useState(null);
   const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
-  // Filter out adopted pets first, then apply search filter
-  const filteredPets = pets
+  // Count available and reserved pets
+  const availablePets = pets.filter(pet => pet.adoptionStatus === 'Available').length;
+  const reservedPets = pets.filter(pet => pet.adoptionStatus === 'Reserved').length;
+
+  // Get the most recently added pets (not adopted)
+  const recentPets = [...pets]
     .filter(pet => pet.adoptionStatus !== 'Adopted')
-    .filter(pet => {
-      if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      return (
-        pet.name.toLowerCase().includes(query) ||
-        pet.breed.toLowerCase().includes(query) ||
-        (pet.adoptionStatus && pet.adoptionStatus.toLowerCase().includes(query))
-      );
-    });
+    .sort((a, b) => {
+      // Sort by ID in descending order (assuming ID is based on timestamp)
+      return parseInt(b.id) - parseInt(a.id);
+    })
+    .slice(0, 3); // Only take the 3 most recent pets
 
   const handlePetPress = (pet) => {
     setSelectedPet(pet);
     setIsPetDetailsModalVisible(true);
   };
 
-  const PetCard = ({ pet }) => (
+  const handleViewAllPets = () => {
+    router.push('/(tabs)/pets');
+  };
+
+  const renderPetCard = ({ item }) => (
     <TouchableOpacity 
-      style={styles.petCard}
-      onPress={() => handlePetPress(pet)}
+      style={styles.recentPetCard}
+      onPress={() => handlePetPress(item)}
     >
       <Image
-        source={{ uri: pet.imageUri }}
-        style={styles.petImage}
+        source={{ uri: item.imageUri }}
+        style={styles.recentPetImage}
+        resizeMode="cover"
       />
-      <View style={styles.petInfo}>
-        <Text style={styles.petName}>{pet.name}</Text>
-        <Text style={styles.petDetail}>Gender: {pet.gender}</Text>
-        <Text style={styles.petDetail}>Breed: {pet.breed}</Text>
-        <Text style={styles.petDetail}>Age: {pet.age}</Text>
-        <Text style={styles.petDescription} numberOfLines={3} ellipsizeMode="tail">
-          "{pet.description}"
-        </Text>
+      <View style={styles.recentPetInfo}>
+        <Text style={styles.recentPetName}>{item.name}</Text>
+        <Text style={styles.recentPetBreed}>{item.breed}</Text>
         <View style={styles.statusContainer}>
           <Text style={[
             styles.statusText,
-            pet.adoptionStatus === 'Available' && styles.statusAvailable,
-            pet.adoptionStatus === 'Adopted' && styles.statusAdopted,
-            pet.adoptionStatus === 'Reserved' && styles.statusReserved,
+            item.adoptionStatus === 'Available' && styles.statusAvailable,
+            item.adoptionStatus === 'Reserved' && styles.statusReserved,
           ]}>
-            {pet.adoptionStatus}
+            {item.adoptionStatus}
           </Text>
         </View>
       </View>
@@ -61,25 +61,47 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      <ScrollView style={styles.container}>
         <Text style={styles.title}>Time to manage your pets!</Text>
         
-        <View style={styles.searchContainer}>
-          <FontAwesome name="search" size={20} color="#C4C4C4" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search pets..."
-            placeholderTextColor="#C4C4C4"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+        {/* Dashboard Stats */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>{availablePets}</Text>
+            <Text style={styles.statLabel}>Available Pets</Text>
+          </View>
+          
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>{reservedPets}</Text>
+            <Text style={styles.statLabel}>Reserved Pets</Text>
+          </View>
         </View>
-
-        <ScrollView style={styles.petList}>
-          {filteredPets.map(pet => (
-            <PetCard key={pet.id} pet={pet} />
-          ))}
-        </ScrollView>
+        
+        {/* Recently Available Pets Section */}
+        <View style={styles.recentPetsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recently Available Pets</Text>
+            <TouchableOpacity onPress={handleViewAllPets}>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {recentPets.length > 0 ? (
+            <FlatList
+              data={recentPets}
+              renderItem={renderPetCard}
+              keyExtractor={item => item.id}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentPetsList}
+              ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
+            />
+          ) : (
+            <Text style={styles.noPetsText}>No pets available yet</Text>
+          )}
+        </View>
+        
+        
 
         <PetDetailsModal 
           visible={isPetDetailsModalVisible}
@@ -89,10 +111,13 @@ export default function HomeScreen() {
             setSelectedPet(null);
           }}
         />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
+
+const { width } = Dimensions.get('window');
+const cardWidth = width * 0.75;
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -103,87 +128,96 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 16,
-    paddingTop: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 25,
     fontWeight: 'bold',
     color: '#3F3E3F',
     textAlign: 'center',
     marginVertical: 20,
+    marginBottom: 35,
   },
-  searchContainer: {
+  statsContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 55,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 8,
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderColor: '#C7C7C7',   
-    borderWidth: 0.5,
-    marginBottom: 20,
-    paddingHorizontal: 15,
-    height: 50,
-    shadowColor: '#3D356B',
-    shadowOffset: { width: 0, height: 12.52 },
-    shadowOpacity: 0.065,
-    shadowRadius: 11.65,
-    elevation: 2,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#3F3E3F',
-  },
-  petList: {
-    flex: 1,
-  },
-  petCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 15,
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: '#353566',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 30,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    height: 90,
   },
-  petImage: {
-    width: 89,
-    height: 140,
-    borderRadius: 8,
-    marginRight: 12,
-    alignSelf: 'flex-start',
-    marginTop: 4,
-  },
-  petInfo: {
-    flex: 1,
-    paddingVertical: 4,
-  },
-  petName: {
-    fontSize: 16,
+  statNumber: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#3F3E3F',
+    color: '#81CBF9',
     marginBottom: 4,
   },
-  petDetail: {
+  statLabel: {
     fontSize: 14,
     color: '#3F3E3F',
-    marginBottom: 4,
   },
-  petDescription: {
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#3F3E3F',
+  },
+  viewAllText: {
+    fontSize: 16,
+    color: '#81CBF9',
+  },
+  recentPetsSection: {
+    marginBottom: 30,
+  },
+  recentPetsList: {
+    paddingVertical: 10,
+  },
+  recentPetCard: {
+    width: cardWidth,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  recentPetImage: {
+    width: '100%',
+    height: 180,
+  },
+  recentPetInfo: {
+    padding: 15,
+  },
+  recentPetName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#3F3E3F',
+    marginBottom: 5,
+  },
+  recentPetBreed: {
     fontSize: 14,
     color: '#838383',
     marginBottom: 8,
-    fontStyle: 'italic',
   },
   statusContainer: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   statusText: {
     fontSize: 14,
@@ -193,11 +227,45 @@ const styles = StyleSheet.create({
   },
   statusAvailable: {
     color: '#64D2A4',
-  },
-  statusAdopted: {
-    color: '#EF8888',
+    backgroundColor: 'rgba(100, 210, 164, 0.1)',
   },
   statusReserved: {
     color: '#E2E02D',
-  }
+    backgroundColor: 'rgba(226, 224, 45, 0.1)',
+  },
+  noPetsText: {
+    fontSize: 16,
+    color: '#838383',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  quickActionsSection: {
+    marginBottom: 30,
+  },
+  quickActionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+  },
+  actionButton: {
+    flex: 1,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 12,
+    padding: 15,
+    marginHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    color: '#3F3E3F',
+    marginTop: 8,
+    textAlign: 'center',
+  },
 });

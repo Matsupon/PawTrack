@@ -33,7 +33,7 @@ export default function AdoptedModal({ visible, onClose, onSave }) {
   };
 
   return (
-    <Modal visible={visible} transparent={true} animationType="slide">
+    <Modal visible={visible} transparent={true} animationType="fade">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.header}>
@@ -91,6 +91,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     width: '90%',
+    alignItems: 'center',  
+    transform: [{ scale: 1.1 }],  
   },
   header: {
     flexDirection: 'row',

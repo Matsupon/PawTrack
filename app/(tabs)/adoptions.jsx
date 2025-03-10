@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, Image, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { usePets } from '../PetContext';
 import PetDetailsModal from '../../components/PetDetailsModal';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function AdoptionsScreen() {
-  const { pets } = usePets();
+  const { pets, updatePet } = usePets();
   const adoptedPets = pets.filter(pet => pet.adoptionStatus === 'Adopted');
   const [selectedPet, setSelectedPet] = useState(null);
   const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
+  const [isAdopterEditModalVisible, setIsAdopterEditModalVisible] = useState(false);
+  const [adopterData, setAdopterData] = useState({ name: '', contact: '', imageUri: '' });
   const router = useRouter();
 
   // Add this useEffect to refresh the list when pets change
@@ -20,6 +23,62 @@ export default function AdoptionsScreen() {
   const handlePetPress = (pet) => {
     setSelectedPet(pet);
     setIsPetDetailsModalVisible(true);
+  };
+
+  const handleAdopterPress = (pet) => {
+    setSelectedPet(pet);
+    // Initialize the adopter data from the pet
+    if (pet.adopterInfo) {
+      setAdopterData({
+        name: pet.adopterInfo.name || '',
+        contact: pet.adopterInfo.contact || '',
+        imageUri: pet.adopterInfo.imageUri || ''
+      });
+    }
+    setIsAdopterEditModalVisible(true);
+  };
+
+  const pickAdopterImage = async () => {
+    // Request permission to access the media library
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    // Launch the image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1], // Square aspect ratio for profile pictures
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      // Update the adopter data with the selected image
+      setAdopterData({ ...adopterData, imageUri: result.assets[0].uri });
+    }
+  };
+
+  const handleSaveAdopterInfo = async () => {
+    if (!selectedPet) return;
+
+    try {
+      // Create updated pet object with new adopter info
+      const updatedPet = {
+        ...selectedPet,
+        adopterInfo: adopterData
+      };
+
+      // Update the pet in context
+      await updatePet(updatedPet);
+      
+      // Close the modal
+      setIsAdopterEditModalVisible(false);
+    } catch (error) {
+      console.error("Error updating adopter info:", error);
+    }
   };
 
   const handleModalClose = (statusChanged = false) => {
@@ -61,12 +120,24 @@ export default function AdoptionsScreen() {
         </Text>
       </View>
 
-      {/* Adopter Image */}
-      {item.adopterInfo?.imageUri ? (
-        <Image source={{ uri: item.adopterInfo.imageUri }} style={styles.adopterImage} />
-      ) : (
-        <View style={[styles.adopterImage, styles.placeholder]} />
-      )}
+      {/* Adopter Image - Make it touchable to edit adopter info */}
+      <TouchableOpacity onPress={() => handleAdopterPress(item)}>
+        {item.adopterInfo?.imageUri ? (
+          <View style={styles.adopterImageContainer}>
+            <Image source={{ uri: item.adopterInfo.imageUri }} style={styles.adopterImage} />
+            <View style={styles.editBadge}>
+              <FontAwesome name="pencil" size={10} color="#fff" />
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.adopterImage, styles.placeholder, styles.adopterImageContainer]}>
+            <FontAwesome name="user" size={20} color="#C7C7C7" />
+            <View style={styles.editBadge}>
+              <FontAwesome name="pencil" size={10} color="#fff" />
+            </View>
+          </View>
+        )}
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -79,7 +150,7 @@ export default function AdoptionsScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Text style={styles.statNumber}>{adoptedPets.length}</Text>
-            <Text style={styles.statLabel}>Total Adopted Pets</Text> 
+            <Text style={styles.statLabel}>Total Adopted Pets</Text>
           </View>
         </View>
         
@@ -103,6 +174,77 @@ export default function AdoptionsScreen() {
           onClose={handleModalClose}
           fromAdoptionHistory={true}
         />
+
+        {/* Adopter Edit Modal */}
+        <Modal
+          visible={isAdopterEditModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsAdopterEditModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Edit Adopter Information</Text>
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={() => setIsAdopterEditModalVisible(false)}
+                >
+                  <FontAwesome name="close" size={20} color="#3F3E3F" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.formContainer}>
+                {/* Adopter Image Picker */}
+                <View style={styles.imagePickerContainer}>
+                  <TouchableOpacity 
+                    style={styles.imagePicker} 
+                    onPress={pickAdopterImage}
+                  >
+                    {adopterData.imageUri ? (
+                      <Image 
+                        source={{ uri: adopterData.imageUri }} 
+                        style={styles.adopterPreviewImage} 
+                      />
+                    ) : (
+                      <View style={styles.adopterPlaceholder}>
+                        <FontAwesome name="user" size={40} color="#C7C7C7" />
+                      </View>
+                    )}
+                    <View style={styles.cameraIconContainer}>
+                      <FontAwesome name="camera" size={16} color="#fff" />
+                    </View>
+                  </TouchableOpacity>
+                  <Text style={styles.imagePickerText}>Tap to change photo</Text>
+                </View>
+
+                <Text style={styles.inputLabel}>Adopter Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={adopterData.name}
+                  onChangeText={(text) => setAdopterData({...adopterData, name: text})}
+                  placeholder="Enter adopter's name"
+                />
+
+                <Text style={styles.inputLabel}>Contact Information</Text>
+                <TextInput
+                  style={styles.input}
+                  value={adopterData.contact}
+                  onChangeText={(text) => setAdopterData({...adopterData, contact: text})}
+                  placeholder="Enter contact information"
+                  keyboardType="phone-pad"
+                />
+
+                <TouchableOpacity 
+                  style={styles.saveButton}
+                  onPress={handleSaveAdopterInfo}
+                >
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -215,15 +357,141 @@ const styles = StyleSheet.create({
     color: '#FF8C94',
     fontStyle: 'italic',
   },
+  adopterImageContainer: {
+    position: 'relative',
+  },
   adopterImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
     marginLeft: 10,
   },
+  editBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#81CBF9',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
   placeholder: {
     backgroundColor: '#E5E5E5',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#3F3E3F',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  formContainer: {
+    marginBottom: 10,
+  },
+  
+  // Image picker styles
+  imagePickerContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  imagePicker: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  adopterPreviewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  adopterPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F8F8F8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraIconContainer: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#81CBF9',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  imagePickerText: {
+    fontSize: 14,
+    color: '#81CBF9',
+    marginBottom: 10,
+  },
+  
+  inputLabel: {
+    fontSize: 14,
+    color: '#838383',
+    marginBottom: 5,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  saveButton: {
+    backgroundColor: '#81CBF9',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

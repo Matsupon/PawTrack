@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.norielle1233.PawTrack"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "7521ed71-cdcf-4031-ba9a-99087454224f"
+      }
+    },
+    "owner": "norielle1233"
   }
 }

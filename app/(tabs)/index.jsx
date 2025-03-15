@@ -74,7 +74,7 @@ export default function HomeScreen() {
          
         <View style={styles.recentPetsSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recently Available Pets</Text>
+            <Text style={styles.sectionTitle}>Recently Added Pets</Text>
             <TouchableOpacity onPress={handleViewAllPets}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>

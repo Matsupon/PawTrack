@@ -56,15 +56,11 @@ export const PetProvider = ({ children }) => {
 
   const deletePet = async (id) => {
     try {
-      console.log("Deleting pet with ID:", id);
-      // Make a copy of the current pets array
-      const currentPets = [...pets];
-      // Filter out the pet with the given id
+      console.log("Deleting pet with ID:", id); 
+      const currentPets = [...pets]; 
       const updatedPets = currentPets.filter(pet => pet.id !== id);
       console.log("Before deletion:", currentPets.length, "After deletion:", updatedPets.length);
-      // Update state first
       setPets(updatedPets);
-      // Then save to AsyncStorage
       await savePets(updatedPets);
     } catch (error) {
       console.error("Error deleting pet:", error);

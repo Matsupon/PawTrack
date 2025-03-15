@@ -14,11 +14,9 @@ const SplashScreen = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      {/* Background color */}
+    <View style={styles.container}> 
       <View style={styles.background} />
-      
-      {/* Decorative circles */}
+       
       <View style={styles.circlesContainer}>
         <LinearGradient
           colors={['rgba(255, 200, 175, 0.7)', 'rgba(255, 177, 140, 0)']}
@@ -38,9 +36,7 @@ const SplashScreen = () => {
           start={{ x: 0.1, y: 0.1 }}
           end={{ x: 0.9, y: 0.9 }}
         />
-      </View>
-      
-      {/* Logo and content */}
+      </View> 
       <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
         <View style={styles.logoContainer}>
           <Image 
@@ -74,7 +70,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#FFB18C', // Salmon color from the design
+    backgroundColor: '#FFB18C', 
     zIndex: 1,
   },
   circlesContainer: {

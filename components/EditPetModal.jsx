@@ -17,8 +17,7 @@ export default function EditPetModal({ visible, pet, onClose }) {
   const [showAdoptedModal, setShowAdoptedModal] = useState(false);
   const adoptionStatuses = ['Available', 'Reserved', 'Adopted'];
   const [previousStatus, setPreviousStatus] = useState(pet?.adoptionStatus);
-
-  // Reset petData when pet changes
+ 
   useEffect(() => {
     if (pet) {
       setPetData({...pet});
@@ -39,21 +38,17 @@ export default function EditPetModal({ visible, pet, onClose }) {
     }
   };
 
-  const handleSubmit = async () => {
-    // Update the pet in the context
+  const handleSubmit = async () => { 
     await updatePet(petData);
-    
-    // Check if status changed to Adopted
     const becameAdopted = previousStatus !== 'Adopted' && petData.adoptionStatus === 'Adopted';
     
-    // If the pet became adopted, close everything and navigate to adoptions tab
     if (becameAdopted) {
       onClose();
       setTimeout(() => {
         router.replace('/(tabs)/adoptions');
       }, 300);
     } else {
-      // Otherwise, just close the edit modal but keep details modal open
+  
       onClose(petData);
     }
   };

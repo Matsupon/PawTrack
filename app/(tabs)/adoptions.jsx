@@ -14,8 +14,7 @@ export default function AdoptionsScreen() {
   const [isAdopterEditModalVisible, setIsAdopterEditModalVisible] = useState(false);
   const [adopterData, setAdopterData] = useState({ name: '', contact: '', imageUri: '' });
   const router = useRouter();
-
-  // Add this useEffect to refresh the list when pets change
+ 
   useEffect(() => {
     console.log("Pets updated in adoptions screen");
   }, [pets]);
@@ -26,8 +25,7 @@ export default function AdoptionsScreen() {
   };
 
   const handleAdopterPress = (pet) => {
-    setSelectedPet(pet);
-    // Initialize the adopter data from the pet
+    setSelectedPet(pet); 
     if (pet.adopterInfo) {
       setAdopterData({
         name: pet.adopterInfo.name || '',
@@ -38,25 +36,22 @@ export default function AdoptionsScreen() {
     setIsAdopterEditModalVisible(true);
   };
 
-  const pickAdopterImage = async () => {
-    // Request permission to access the media library
+  const pickAdopterImage = async () => { 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
       alert('Sorry, we need camera roll permissions to make this work!');
       return;
     }
-
-    // Launch the image picker
+ 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1], // Square aspect ratio for profile pictures
+      aspect: [1, 1], 
       quality: 1,
     });
 
-    if (!result.canceled) {
-      // Update the adopter data with the selected image
+    if (!result.canceled) { 
       setAdopterData({ ...adopterData, imageUri: result.assets[0].uri });
     }
   };
@@ -64,17 +59,14 @@ export default function AdoptionsScreen() {
   const handleSaveAdopterInfo = async () => {
     if (!selectedPet) return;
 
-    try {
-      // Create updated pet object with new adopter info
+    try { 
       const updatedPet = {
         ...selectedPet,
         adopterInfo: adopterData
       };
-
-      // Update the pet in context
+ 
       await updatePet(updatedPet);
-      
-      // Close the modal
+       
       setIsAdopterEditModalVisible(false);
     } catch (error) {
       console.error("Error updating adopter info:", error);
@@ -84,13 +76,12 @@ export default function AdoptionsScreen() {
   const handleModalClose = (statusChanged = false) => {
     setIsPetDetailsModalVisible(false);
     setSelectedPet(null);
-    
-    // If status was changed to Available, navigate to home screen
+     
     if (statusChanged) {
       console.log("Status changed, navigating to home");
       setTimeout(() => {
         router.replace('/(tabs)');
-      }, 300); // Small delay to ensure modal is fully closed
+      }, 300);  
     }
   };
 
@@ -145,8 +136,7 @@ export default function AdoptionsScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Text style={styles.title}>Adoption History</Text>
-        
-        {/* Add total adopted pets counter */}
+         
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Text style={styles.statNumber}>{adoptedPets.length}</Text>
@@ -194,8 +184,7 @@ export default function AdoptionsScreen() {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.formContainer}>
-                {/* Adopter Image Picker */}
+              <View style={styles.formContainer}> 
                 <View style={styles.imagePickerContainer}>
                   <TouchableOpacity 
                     style={styles.imagePicker} 
@@ -288,7 +277,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF8C94', // Pink color for adoption theme
+    color: '#FF8C94',  
     marginRight: 10,
   },
   statLabel: {

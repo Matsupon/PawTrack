@@ -11,8 +11,7 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
   const [statusChanged, setStatusChanged] = useState(false);
   const [currentPet, setCurrentPet] = useState(pet);
   const { deletePet, updatePet } = usePets();
-
-  // Update currentPet when pet prop changes
+ 
   useEffect(() => {
     if (pet) {
       setCurrentPet(pet);
@@ -30,34 +29,29 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
       console.log("Deleting pet with ID:", currentPet.id);
       await deletePet(currentPet.id);
       setShowDeleteConfirm(false);
-      onClose(); // Close the modal after deletion
+      onClose();  
     } catch (error) {
       console.error("Error deleting pet:", error);
     }
   };
 
   const handleEditPress = () => {
-    if (fromAdoptionHistory) {
-      // For adoption history, show custom return confirmation
+    if (fromAdoptionHistory) { 
       setShowReturnConfirm(true);
-    } else {
-      // Normal edit for non-adoption history
+    } else { 
       setIsEditModalVisible(true);
     }
   };
 
-  const handleEditClose = (updatedPet) => {
-    // If we received an updated pet, update our local state
+  const handleEditClose = (updatedPet) => { 
     if (updatedPet) {
       setCurrentPet(updatedPet);
-      
-      // If status changed to Available from Adoption History, set flag
+       
       if (fromAdoptionHistory && updatedPet.adoptionStatus === 'Available') {
         setStatusChanged(true);
       }
     }
-    
-    // Close the edit modal
+     
     setIsEditModalVisible(false);
   };
 
@@ -73,7 +67,7 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
       setCurrentPet(updatedPet);
       setStatusChanged(true);
       setShowReturnConfirm(false);
-      onClose(true); // Pass true to indicate status changed
+      onClose(true);  
     } catch (error) {
       console.error("Error returning pet:", error);
     }
@@ -219,8 +213,7 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
             </TouchableOpacity>
           </View>
         )}
-
-        {/* Custom Delete Confirmation Modal */}
+ 
         {showDeleteConfirm && (
           <View style={styles.confirmOverlay}>
             <View style={styles.confirmBox}>
@@ -303,7 +296,7 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#81CBF9', // Pastel blue
+    backgroundColor: '#81CBF9',  
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 20,
@@ -320,7 +313,7 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 300,
-    marginTop: 20, // Add margin to move image down
+    marginTop: 20, 
   },
   infoContainer: {
     padding: 20,
@@ -445,8 +438,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  
-  // Custom confirmation modal styles
+   
   confirmOverlay: {
     position: 'absolute',
     top: 0,
@@ -456,7 +448,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000, // High z-index to ensure it's on top
+    zIndex: 1000,  
   },
   confirmBox: {
     width: '80%',

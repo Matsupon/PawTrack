@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaView, FlatList, Dimensions } from 'react-native';
-import { usePets } from '../PetContext';
-import { FontAwesome } from '@expo/vector-icons';
+import { usePets } from '../PetContext'; 
 import PetDetailsModal from '../../components/PetDetailsModal';
 import { useRouter } from 'expo-router';
 
@@ -10,19 +9,16 @@ export default function HomeScreen() {
   const [selectedPet, setSelectedPet] = useState(null);
   const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
   const router = useRouter();
-
-  // Count available and reserved pets
+ 
   const availablePets = pets.filter(pet => pet.adoptionStatus === 'Available').length;
   const reservedPets = pets.filter(pet => pet.adoptionStatus === 'Reserved').length;
-
-  // Get the most recently added pets (not adopted)
+ 
   const recentPets = [...pets]
     .filter(pet => pet.adoptionStatus !== 'Adopted')
-    .sort((a, b) => {
-      // Sort by ID in descending order (assuming ID is based on timestamp)
+    .sort((a, b) => { 
       return parseInt(b.id) - parseInt(a.id);
     })
-    .slice(0, 3); // Only take the 3 most recent pets
+    .slice(0, 3);  
 
   const handlePetPress = (pet) => {
     setSelectedPet(pet);
@@ -63,8 +59,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
         <Text style={styles.title}>Time to manage your pets!</Text>
-        
-        {/* Dashboard Stats */}
+         
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Text style={styles.statNumber}>{availablePets}</Text>
@@ -76,8 +71,7 @@ export default function HomeScreen() {
             <Text style={styles.statLabel}>Reserved Pets</Text>
           </View>
         </View>
-        
-        {/* Recently Available Pets Section */}
+         
         <View style={styles.recentPetsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recently Available Pets</Text>
@@ -100,8 +94,6 @@ export default function HomeScreen() {
             <Text style={styles.noPetsText}>No pets available yet</Text>
           )}
         </View>
-        
-        
 
         <PetDetailsModal 
           visible={isPetDetailsModalVisible}

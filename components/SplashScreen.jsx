@@ -46,7 +46,7 @@ const SplashScreen = () => {
           />
         </View>
         
-        <Text style={styles.title}>PawShelter</Text>
+        <Text style={styles.title}>PawTrack</Text>
         
         <Text style={styles.subtitle}>
           Pet Adoption Manager

@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Switch
 import { usePets } from '../app/PetContext';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 export default function AddPetForm({ onClose, onSubmit }) {
   const { addPet } = usePets();
@@ -27,15 +28,29 @@ export default function AddPetForm({ onClose, onSubmit }) {
   const speciesOptions = ['Cat', 'Dog'];
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      setPetData({ ...petData, imageUri: result.assets[0].uri });
+      if (!result.canceled) {
+        const imageUri = result.assets[0].uri;
+        // Copy the image to the app's cache directory
+        const fileName = imageUri.split('/').pop();
+        const newPath = `${FileSystem.cacheDirectory}${fileName}`;
+        
+        await FileSystem.copyAsync({
+          from: imageUri,
+          to: newPath
+        });
+        
+        setPetData({ ...petData, imageUri: newPath });
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
     }
   };
 

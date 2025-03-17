@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Modal, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 export default function AdoptedModal({ visible, onClose, onSave }) {
   const [adopter, setAdopter] = useState({
@@ -11,15 +12,29 @@ export default function AdoptedModal({ visible, onClose, onSave }) {
   });
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      setAdopter({ ...adopter, imageUri: result.assets[0].uri });
+      if (!result.canceled) {
+        const imageUri = result.assets[0].uri;
+        // Copy the image to the app's cache directory
+        const fileName = imageUri.split('/').pop();
+        const newPath = `${FileSystem.cacheDirectory}${fileName}`;
+        
+        await FileSystem.copyAsync({
+          from: imageUri,
+          to: newPath
+        });
+        
+        setAdopter({ ...adopter, imageUri: newPath });
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
     }
   };
 

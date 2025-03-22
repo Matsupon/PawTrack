@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "PawTrack2",
-    "slug": "PawTrack2",
+    "name": "PawTrack",
+    "slug": "PawTrack",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.norielle1233.PawTrack"
     },
     "web": {
       "bundler": "metro",
@@ -32,10 +33,20 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "388879be-0187-41bc-ad60-6650de0c308b"
+      }
+    },
+    "owner": "norielle1233"
   }
 }

@@ -5,6 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { usePets } from '../app/PetContext';
 import * as ImagePicker from 'expo-image-picker';
 import AdoptedModal from './AdoptedModal';
+import ReservedModal from './ReservedModal';
 import { useRouter } from 'expo-router';
 
 export default function EditPetModal({ visible, pet, onClose }) {
@@ -15,6 +16,7 @@ export default function EditPetModal({ visible, pet, onClose }) {
   });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [showAdoptedModal, setShowAdoptedModal] = useState(false);
+  const [showReservedModal, setShowReservedModal] = useState(false);
   const adoptionStatuses = ['Available', 'Reserved', 'Adopted'];
   const [previousStatus, setPreviousStatus] = useState(pet?.adoptionStatus);
  
@@ -41,14 +43,16 @@ export default function EditPetModal({ visible, pet, onClose }) {
   const handleSubmit = async () => { 
     await updatePet(petData);
     const becameAdopted = previousStatus !== 'Adopted' && petData.adoptionStatus === 'Adopted';
+    const becameAvailable = previousStatus === 'Adopted' && petData.adoptionStatus === 'Available';
     
     if (becameAdopted) {
       onClose();
       setTimeout(() => {
-        router.replace('/(tabs)/adoptions');
+        router.push('/(tabs)/adoptions');
       }, 300);
+    } else if (becameAvailable) {
+      onClose(true);
     } else {
-  
       onClose(petData);
     }
   };
@@ -56,12 +60,16 @@ export default function EditPetModal({ visible, pet, onClose }) {
   const handleStatusChange = async (status) => {
     if (status === 'Adopted') {
       setShowAdoptedModal(true);
+    } else if (status === 'Reserved') {
+      setShowReservedModal(true);
     } else {
       const updatedPet = {
         ...petData,
         adoptionStatus: status,
         adopterInfo: null,
-        adoptionDate: null
+        adoptionDate: null,
+        reserverInfo: null,
+        reservationDate: null
       };
       setPetData(updatedPet);
     }
@@ -77,6 +85,17 @@ export default function EditPetModal({ visible, pet, onClose }) {
     };
     setPetData(updatedPet);
     setShowAdoptedModal(false);
+  };
+
+  const handleReserverSave = async (reserverInfo) => {
+    const updatedPet = {
+      ...petData,
+      adoptionStatus: 'Reserved',
+      reserverInfo,
+      reservationDate: new Date().toISOString()
+    };
+    setPetData(updatedPet);
+    setShowReservedModal(false);
   };
 
   return (
@@ -232,6 +251,12 @@ export default function EditPetModal({ visible, pet, onClose }) {
           visible={showAdoptedModal}
           onClose={() => setShowAdoptedModal(false)}
           onSave={handleAdopterSave}
+        />
+
+        <ReservedModal
+          visible={showReservedModal}
+          onClose={() => setShowReservedModal(false)}
+          onSave={handleReserverSave}
         />
       </View>
     </Modal>

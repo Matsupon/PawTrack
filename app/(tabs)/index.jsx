@@ -10,8 +10,10 @@ export default function HomeScreen() {
   const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
   const router = useRouter();
  
+  const totalPets = pets.length;
   const availablePets = pets.filter(pet => pet.adoptionStatus === 'Available').length;
   const reservedPets = pets.filter(pet => pet.adoptionStatus === 'Reserved').length;
+  const specialNeedsPets = pets.filter(pet => pet.medicalRecords && pet.medicalRecords.length > 0).length;
  
   const recentPets = [...pets]
     .filter(pet => pet.adoptionStatus !== 'Adopted')
@@ -62,13 +64,25 @@ export default function HomeScreen() {
          
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{availablePets}</Text>
-            <Text style={styles.statLabel}>Available Pets</Text>
+            <Text style={[styles.statNumber, styles.totalPetsColor]}>{totalPets}</Text>
+            <Text style={styles.statLabel}>Total Pets</Text>
           </View>
           
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{reservedPets}</Text>
+            <Text style={[styles.statNumber, styles.availablePetsColor]}>{availablePets}</Text>
+            <Text style={styles.statLabel}>Available Pets</Text>
+          </View>
+        </View>
+
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, styles.reservedPetsColor]}>{reservedPets}</Text>
             <Text style={styles.statLabel}>Reserved Pets</Text>
+          </View>
+          
+          <View style={styles.statBox}>
+            <Text style={[styles.statNumber, styles.specialNeedsColor]}>{specialNeedsPets}</Text>
+            <Text style={styles.statLabel}>Special Needs Pets</Text>
           </View>
         </View>
          
@@ -132,7 +146,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 55,
+    marginBottom: 20,
   },
   statBox: {
     flex: 1,
@@ -151,8 +165,19 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#81CBF9',
     marginBottom: 4,
+  },
+  totalPetsColor: {
+    color: '#81CBF9', // Blue
+  },
+  availablePetsColor: {
+    color: '#64D2A4', // Green
+  },
+  reservedPetsColor: {
+    color: '#E2E02D', // Yellow
+  },
+  specialNeedsColor: {
+    color: '#9B6B9E', // Purple
   },
   statLabel: {
     fontSize: 14,

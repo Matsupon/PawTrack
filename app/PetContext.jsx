@@ -34,6 +34,7 @@ export const PetProvider = ({ children }) => {
     const newPet = {
       id: Date.now().toString(),
       status: 'Available',
+      medicalRecords: [],
       ...pet
     };
     const updatedPets = [...pets, newPet];
@@ -82,6 +83,27 @@ export const PetProvider = ({ children }) => {
     await savePets(updatedPets);
   };
 
+  const updateMedicalRecords = async (petId, medicalRecords) => {
+    const updatedPets = pets.map(pet => 
+      pet.id === petId ? { ...pet, medicalRecords } : pet
+    );
+    setPets(updatedPets);
+    await savePets(updatedPets);
+  };
+
+  const deleteMedicalRecord = async (petId, recordIndex) => {
+    const updatedPets = pets.map(pet => {
+      if (pet.id === petId) {
+        const updatedRecords = [...pet.medicalRecords];
+        updatedRecords.splice(recordIndex, 1);
+        return { ...pet, medicalRecords: updatedRecords };
+      }
+      return pet;
+    });
+    setPets(updatedPets);
+    await savePets(updatedPets);
+  };
+
   return (
     <PetContext.Provider value={{ 
       pets, 
@@ -89,7 +111,9 @@ export const PetProvider = ({ children }) => {
       updatePetStatus, 
       deletePet, 
       searchPets,
-      updatePet 
+      updatePet,
+      updateMedicalRecords,
+      deleteMedicalRecord
     }}>
       {children}
     </PetContext.Provider>

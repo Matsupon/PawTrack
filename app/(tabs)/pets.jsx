@@ -9,6 +9,7 @@ import PetDetailsModal from '../../components/PetDetailsModal';
 export default function PetsScreen() {
   const { pets, deletePet } = usePets();
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [secondaryFilter, setSecondaryFilter] = useState('all');
   const [isAddPetModalVisible, setIsAddPetModalVisible] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const [isPetDetailsModalVisible, setIsPetDetailsModalVisible] = useState(false);
@@ -38,11 +39,23 @@ export default function PetsScreen() {
     .filter(pet => {
       if (selectedFilter === 'all') return true;
       return pet.species.toLowerCase() === selectedFilter;
+    })
+    .filter(pet => {
+      if (selectedFilter === 'all' || secondaryFilter === 'all') return true;
+      if (secondaryFilter === 'special') {
+        return pet.medicalRecords && pet.medicalRecords.length > 0;
+      }
+      return true;
     });
 
   const handlePetPress = (pet) => {
     setSelectedPet(pet);
     setIsPetDetailsModalVisible(true);
+  };
+
+  const handleFilterSelect = (filter) => {
+    setSelectedFilter(filter);
+    setSecondaryFilter('all'); // Reset secondary filter when changing main filter
   };
 
   const PetCard = ({ pet }) => (
@@ -96,9 +109,20 @@ export default function PetsScreen() {
           <TouchableOpacity 
             style={[
               styles.filterButton,
+              selectedFilter === 'all' && styles.filterButtonActive
+            ]}
+            onPress={() => handleFilterSelect('all')}
+          >
+            <FontAwesome name="paw" size={20} color="#3F3E3F" style={styles.filterIcon} />
+            <Text style={styles.filterText}>All</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[
+              styles.filterButton,
               selectedFilter === 'cat' && styles.filterButtonActive
             ]}
-            onPress={() => setSelectedFilter('cat')}
+            onPress={() => handleFilterSelect('cat')}
           >
             <Image 
               source={require('../../assets/images/cat-icon.png')} 
@@ -112,7 +136,7 @@ export default function PetsScreen() {
               styles.filterButton,
               selectedFilter === 'dog' && styles.filterButtonActive
             ]}
-            onPress={() => setSelectedFilter('dog')}
+            onPress={() => handleFilterSelect('dog')}
           >
             <Image 
               source={require('../../assets/images/dog-icon.png')} 
@@ -121,6 +145,32 @@ export default function PetsScreen() {
             <Text style={styles.filterText}>Dogs</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Secondary Filter Buttons */}
+        {selectedFilter !== 'all' && (
+          <View style={styles.secondaryFilterContainer}>
+            <TouchableOpacity 
+              style={[
+                styles.secondaryFilterButton,
+                secondaryFilter === 'all' && styles.secondaryFilterButtonActive
+              ]}
+              onPress={() => setSecondaryFilter('all')}
+            >
+              <Text style={styles.secondaryFilterText}>All</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[
+                styles.secondaryFilterButton,
+                secondaryFilter === 'special' && styles.secondaryFilterButtonActive
+              ]}
+              onPress={() => setSecondaryFilter('special')}
+            >
+              <FontAwesome name="medkit" size={16} color="#3F3E3F" style={styles.secondaryFilterIcon} />
+              <Text style={styles.secondaryFilterText}>Special Needs</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <ScrollView style={styles.petList}>
           {filteredPets.map(pet => (
@@ -206,7 +256,7 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 48,
+    gap: 24,
     marginBottom: 20,
   },
   filterButton: {
@@ -316,5 +366,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     zIndex: 1,
+  },
+  secondaryFilterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 20,
+  },
+  secondaryFilterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
+    shadowColor: '#3D356B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  secondaryFilterButtonActive: {
+    backgroundColor: '#FFCBB4',
+  },
+  secondaryFilterText: {
+    fontSize: 14,
+    color: '#3F3E3F',
+  },
+  secondaryFilterIcon: {
+    marginRight: 4,
   },
 }); 

@@ -79,9 +79,7 @@ export default function AdoptionsScreen() {
      
     if (statusChanged) {
       console.log("Status changed, navigating to home");
-      setTimeout(() => {
-        router.replace('/(tabs)/index');
-      }, 300);  
+      router.push('/(tabs)');
     }
   };
 
@@ -111,7 +109,6 @@ export default function AdoptionsScreen() {
         </Text>
       </View>
 
-      {/* Adopter Image - Make it touchable to edit adopter info */}
       <TouchableOpacity onPress={() => handleAdopterPress(item)}>
         {item.adopterInfo?.imageUri ? (
           <View style={styles.adopterImageContainer}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, Modal, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import EditPetModal from './EditPetModal';
+import MedicalRecordModal from './MedicalRecordModal';
 import { usePets } from '../app/PetContext';
 
 export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHistory = false }) {
@@ -10,6 +11,7 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
   const [showReturnConfirm, setShowReturnConfirm] = useState(false);
   const [statusChanged, setStatusChanged] = useState(false);
   const [currentPet, setCurrentPet] = useState(pet);
+  const [showMedicalRecordModal, setShowMedicalRecordModal] = useState(false);
   const { deletePet, updatePet } = usePets();
  
   useEffect(() => {
@@ -71,6 +73,15 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
     } catch (error) {
       console.error("Error returning pet:", error);
     }
+  };
+
+  const handleMedicalRecordSave = async (newRecord) => {
+    const updatedPet = {
+      ...currentPet,
+      medicalRecords: [...(currentPet.medicalRecords || []), newRecord]
+    };
+    await updatePet(updatedPet);
+    setCurrentPet(updatedPet);
   };
 
   return (
@@ -188,7 +199,7 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
               </Text>
             </View>
 
-            {/* If from adoption history, show adopter info */}
+            {/* Show adopter info if from adoption history */}
             {fromAdoptionHistory && currentPet.adopterInfo && (
               <View style={styles.adopterSection}>
                 <Text style={styles.sectionTitle}>Adopter Information</Text>
@@ -199,6 +210,53 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
                 </Text>
               </View>
             )}
+
+            {/* Show reserver info if pet is reserved */}
+            {currentPet.adoptionStatus === 'Reserved' && currentPet.reserverInfo && (
+              <View style={styles.adopterSection}>
+                <Text style={styles.sectionTitle}>Reserver Information</Text>
+                {currentPet.reserverInfo.imageUri && (
+                  <Image 
+                    source={{ uri: currentPet.reserverInfo.imageUri }} 
+                    style={styles.reserverImage}
+                  />
+                )}
+                <Text style={styles.adopterDetail}>Name: {currentPet.reserverInfo.name}</Text>
+                <Text style={styles.adopterDetail}>Contact: {currentPet.reserverInfo.contact}</Text>
+                <Text style={styles.adopterDetail}>Address: {currentPet.reserverInfo.address}</Text>
+                <Text style={styles.adopterDetail}>
+                  Reservation Date: {new Date(currentPet.reservationDate).toLocaleDateString()}
+                </Text>
+              </View>
+            )}
+
+            {/* Medical History Section */}
+            <View style={styles.medicalHistorySection}>
+              <View style={styles.medicalHistoryHeader}>
+                <Text style={styles.sectionTitle}>Medical History</Text>
+                {currentPet.medicalRecords && currentPet.medicalRecords.length > 0 && (
+                  <TouchableOpacity onPress={() => setShowMedicalRecordModal(true)}>
+                    <Text style={styles.viewAllText}>View All</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              
+              {(!currentPet.medicalRecords || currentPet.medicalRecords.length === 0) ? (
+                <TouchableOpacity 
+                  style={styles.addMedicalRecordButton}
+                  onPress={() => setShowMedicalRecordModal(true)}
+                >
+                  <Text style={styles.addMedicalRecordText}>Add Medical Record</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.latestRecord}>
+                  <Text style={styles.recordDate}>🗓️ {currentPet.medicalRecords[currentPet.medicalRecords.length - 1].date}</Text>
+                  <Text style={styles.recordDetail}>• Treatment: {currentPet.medicalRecords[currentPet.medicalRecords.length - 1].treatmentType}</Text>
+                  <Text style={styles.recordDetail}>• Notes: {currentPet.medicalRecords[currentPet.medicalRecords.length - 1].notes}</Text>
+                  <Text style={styles.recordDetail}>• Vet: {currentPet.medicalRecords[currentPet.medicalRecords.length - 1].vetName}</Text>
+                </View>
+              )}
+            </View>
           </View>
         </ScrollView>
 
@@ -269,6 +327,13 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
           visible={isEditModalVisible}
           pet={currentPet}
           onClose={handleEditClose}
+        />
+
+        <MedicalRecordModal
+          visible={showMedicalRecordModal}
+          onClose={() => setShowMedicalRecordModal(false)}
+          pet={currentPet}
+          medicalRecords={currentPet.medicalRecords || []}
         />
       </View>
     </Modal>
@@ -521,5 +586,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#3F3E3F',
     marginBottom: 8,
+  },
+  reserverImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  medicalHistorySection: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 10,
+  },
+  medicalHistoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  viewAllText: {
+    color: '#3F3E3F',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  latestRecord: {
+    padding: 15,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 8,
+  },
+  recordDate: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#3F3E3F',
+    marginBottom: 8,
+  },
+  recordDetail: {
+    fontSize: 14,
+    color: '#3F3E3F',
+    marginBottom: 4,
+  },
+  addMedicalRecordButton: {
+    backgroundColor: '#ccccff',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  addMedicalRecordText: {
+    color: '#3F3E3F',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

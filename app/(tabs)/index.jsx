@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaVi
 import { usePets } from '../PetContext'; 
 import PetDetailsModal from '../../components/PetDetailsModal';
 import { useRouter } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const { pets } = usePets();
@@ -45,13 +46,23 @@ export default function HomeScreen() {
         <Text style={styles.recentPetName}>{item.name}</Text>
         <Text style={styles.recentPetBreed}>{item.breed}</Text>
         <View style={styles.statusContainer}>
-          <Text style={[
-            styles.statusText,
-            item.adoptionStatus === 'Available' && styles.statusAvailable,
-            item.adoptionStatus === 'Reserved' && styles.statusReserved,
-          ]}>
-            {item.adoptionStatus}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={[
+              styles.statusText,
+              item.adoptionStatus === 'Available' && styles.statusAvailable,
+              item.adoptionStatus === 'Reserved' && styles.statusReserved,
+            ]}>
+              {item.adoptionStatus}
+            </Text>
+            {item.medicalRecords && item.medicalRecords.length > 0 && (
+              <FontAwesome
+                name="medkit"
+                size={16}
+                color="#3F3E3F"
+                style={{ marginLeft: 6 }}
+              />
+            )}
+          </View>
         </View>
       </View>
     </TouchableOpacity>

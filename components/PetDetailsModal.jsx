@@ -20,6 +20,12 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
     }
   }, [pet]);
 
+  useEffect(() => {
+    if (!visible) {
+      setShowMedicalRecordModal(false);
+    }
+  }, [visible]);
+
   if (!currentPet) return null;
 
   const handleDelete = () => {
@@ -84,16 +90,21 @@ export default function PetDetailsModal({ visible, pet, onClose, fromAdoptionHis
     setCurrentPet(updatedPet);
   };
 
+  const handleClose = () => {
+    setShowMedicalRecordModal(false);
+    onClose(statusChanged);
+  };
+
   return (
     <Modal
       visible={visible}
       animationType="slide"
-      onRequestClose={() => onClose(statusChanged)}
+      onRequestClose={handleClose}
       transparent={false}
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => onClose(statusChanged)}>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <FontAwesome name="close" size={24} color="#3F3E3F" />
           </TouchableOpacity>
           <TouchableOpacity 

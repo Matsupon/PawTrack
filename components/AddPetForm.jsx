@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Switch, Image, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Switch, Image, Modal, Dimensions } from 'react-native';
 import { usePets } from '../app/PetContext';
 import { FontAwesome } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
+
+const screenWidth = Dimensions.get('window').width;
 
 export default function AddPetForm({ onClose, onSubmit }) {
   const { addPet } = usePets();
@@ -27,6 +30,13 @@ export default function AddPetForm({ onClose, onSubmit }) {
   const speciesOptions = ['Cat', 'Dog'];
 
   const pickImage = async () => {
+    // Request permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -35,10 +45,24 @@ export default function AddPetForm({ onClose, onSubmit }) {
     });
 
     if (!result.canceled) {
-      setPetData({ ...petData, imageUri: result.assets[0].uri });
+      const originalUri = result.assets[0].uri;
+      const fileName = originalUri.split('/').pop();
+      const newPath = FileSystem.documentDirectory + fileName;
+
+      try {
+        // Copy the file to persistent storage
+        await FileSystem.copyAsync({
+          from: originalUri,
+          to: newPath,
+        });
+        setPetData({ ...petData, imageUri: newPath });
+      } catch (e) {
+        console.error('Failed to save image:', e);
+        setPetData({ ...petData, imageUri: originalUri }); // fallback
+      }
     }
   };
-
+  
   const handleSubmit = () => {
     addPet(petData);
     onSubmit(petData);
@@ -297,10 +321,11 @@ const styles = StyleSheet.create({
     color: '#3F3E3F',
   },
   previewImage: {
-    width: '100%',
-    height: 200,
+    width: screenWidth - 32,
+    height: ((screenWidth - 32) * 3) / 4,
     borderRadius: 8,
     marginBottom: 16,
+    alignSelf: 'center',
   },
   pickerContainer: {
     borderWidth: 1,

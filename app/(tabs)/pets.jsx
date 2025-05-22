@@ -76,14 +76,24 @@ export default function PetsScreen() {
           "{pet.description}"
         </Text>
         <View style={styles.statusContainer}>
-          <Text style={[
-            styles.statusText,
-            pet.adoptionStatus === 'Available' && styles.statusAvailable,
-            pet.adoptionStatus === 'Adopted' && styles.statusAdopted,
-            pet.adoptionStatus === 'Reserved' && styles.statusReserved,
-          ]}>
-            {pet.adoptionStatus}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={[
+              styles.statusText,
+              pet.adoptionStatus === 'Available' && styles.statusAvailable,
+              pet.adoptionStatus === 'Adopted' && styles.statusAdopted,
+              pet.adoptionStatus === 'Reserved' && styles.statusReserved,
+            ]}>
+              {pet.adoptionStatus}
+            </Text>
+            {pet.medicalRecords && pet.medicalRecords.length > 0 && (
+              <FontAwesome
+                name="medkit"
+                size={16}
+                color="#3F3E3F"
+                style={{ marginLeft: 6 }}
+              />
+            )}
+          </View>
         </View>
       </View>
     </TouchableOpacity>
